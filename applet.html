@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Quickhull applet</title>
+  <meta name="description" content="Interactive SageMath applet: convex hull of a point cloud with Quickhull, step by step and animated, plus a benchmark against Graham's scan.">
+  <script src="assets/js/theme.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Jost:wght@400;500&family=Literata:ital,opsz,wght@0,7..72,400;1,7..72,400&family=JetBrains+Mono&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/css/style.css">
+  <script src="https://sagecell.sagemath.org/static/embedded_sagecell.js"></script>
+</head>
+<body>
+
+  <nav class="nav" aria-label="Navigation">
+    <div class="nav__inner">
+      <a class="nav__brand" href="index.html">Quickhull</a>
+      <ul class="nav__links">
+        <li><a href="index.html#introduction">Introduction</a></li>
+        <li><a href="index.html#instructions">Instructions</a></li>
+        <li><a href="#step-by-step">Step by step</a></li>
+        <li><a href="#benchmark">Versus Graham</a></li>
+      </ul>
+      <button class="theme-toggle" id="theme-toggle" type="button" aria-pressed="false">Dark mode</button>
+    </div>
+  </nav>
+
+  <main class="applet">
+    <header class="applet__header">
+      <h1>Interactive applet</h1>
+      <p>The code runs in SageMath through SageMathCell, so there is nothing to install; you only need an internet connection. The first run takes a few seconds while the server gets ready.</p>
+    </header>
+
+    <section class="applet__block" id="step-by-step">
+      <h2>Quickhull step by step</h2>
+      <div class="applet__columns">
+        <div class="applet__guide">
+          <p>Press <strong>Launch applet</strong> to load the controls, set them as you like and press <strong>Start</strong>. Nothing is computed until you press it, so you can change several controls first.</p>
+          <dl>
+            <dt>Point cloud</dt>
+            <dd>A random distribution, the worst case of Quickhull, or your own points.</dd>
+            <dt>Number of points and seed</dt>
+            <dd>The same seed always generates the same cloud.</dd>
+            <dt>Points by hand</dt>
+            <dd>Only used with «Points entered by hand». Format: <code>[(0, 0), (4, 1), (2, 5)]</code>.</dd>
+            <dt>Quadrilateral filter</dt>
+            <dd>First discards the points inside the quadrilateral of the four extreme points.</dd>
+            <dt>Player</dt>
+            <dd>After <em>Start</em>, the whole process plays in a loop. <em>Pause</em> stops it; <em>Next</em> draws one step and stops; <em>Previous</em> undoes it. You can also change the speed or drag the bar to any moment. After clicking the drawing, the arrow keys move step by step and the space bar plays or pauses. To try another cloud, change the controls and press <em>Start</em> again.</dd>
+          </dl>
+          <p class="applet__legend">
+            <span class="swatch swatch--vertex"></span> vertex of CH(S)
+            <span class="swatch swatch--discarded"></span> discarded
+            <span class="swatch swatch--current"></span> current subproblem
+            <span class="swatch swatch--pending"></span> not yet classified
+            <span class="swatch swatch--hull"></span> hull edge
+          </p>
+        </div>
+        <div class="sheet sheet--idle">
+          <div id="cell-step"><p class="sheet__notice">Loading the SageMath cell…</p></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="applet__block" id="benchmark">
+      <h2>Quickhull versus Graham</h2>
+      <div class="applet__columns">
+        <div class="applet__guide">
+          <p>Measures how long both algorithms take on larger and larger clouds. Press <strong>Launch applet</strong>, choose the parameters and press <strong>Run benchmark</strong>; each run takes a few seconds.</p>
+          <dl>
+            <dt>Point cloud</dt>
+            <dd>With the Quickhull worst case, sizes go up to n = 300.</dd>
+            <dt>Maximum n</dt>
+            <dd>Eight sizes between 100 and this value are measured.</dd>
+            <dt>Repetitions</dt>
+            <dd>The best time over all repetitions is kept.</dd>
+            <dt>Include Quickhull with filter</dt>
+            <dd>Adds the version with the quadrilateral filter and the share of points it discards.</dd>
+          </dl>
+          <p>The table also checks that the three methods return exactly the same vertices, and the <em>empirical exponent</em> summarises the growth: close to 1 for n log n and to 2 for n².</p>
+        </div>
+        <div class="sheet sheet--idle">
+          <div id="cell-benchmark"><p class="sheet__notice">Loading the SageMath cell…</p></div>
+        </div>
+      </div>
+    </section>
+
+    <p class="applet__source">Source code: <a href="sage/core.sage">core.sage</a> (algorithms), <a href="sage/step_by_step.sage">step_by_step.sage</a> (visualisation) and <a href="sage/benchmark.sage">benchmark.sage</a> (timings).</p>
+  </main>
+
+  <script src="assets/js/quickhull-player.js"></script>
+  <script src="assets/js/applet.js"></script>
+</body>
+</html>

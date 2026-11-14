@@ -1,0 +1,352 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Quickhull: convex hull</title>
+  <meta name="description" content="Convex hull of a point cloud with the Quickhull algorithm, explained step by step, with an interactive SageMath applet. Final project for Computational Geometry, iMAT, Comillas ICAI.">
+  <!-- theme.js goes in the head so the saved mode is applied before painting -->
+  <script src="assets/js/theme.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Jost:wght@400;500&family=Literata:ital,opsz,wght@0,7..72,400;1,7..72,400&family=JetBrains+Mono&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/css/style.css">
+  <script>
+    window.MathJax = { tex: { inlineMath: [["$", "$"], ["\\(", "\\)"]] }, svg: { fontCache: "global" } };
+  </script>
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3.2.2/es5/tex-svg.js"></script>
+</head>
+<body>
+
+  <nav class="nav" aria-label="Sections">
+    <div class="nav__inner">
+      <a class="nav__brand" href="#top">Quickhull</a>
+      <ul class="nav__links">
+        <li><a href="#introduction">Introduction</a></li>
+        <li><a href="#instructions">Instructions</a></li>
+        <li><a href="#applet">Applet</a></li>
+        <li><a href="#discussion">Discussion</a></li>
+        <li><a href="#references">References</a></li>
+      </ul>
+      <button class="theme-toggle" id="theme-toggle" type="button" aria-pressed="false">Dark mode</button>
+    </div>
+  </nav>
+
+  <header class="hero" id="top">
+    <div>
+      <h1 class="hero__title">Quickhull</h1>
+      <p class="hero__tagline">The convex hull of a point cloud, splitting and discarding like quicksort.</p>
+      <p class="hero__authors">
+        Javier Martínez Berenguer<br>
+        Javier Mochales López<br>
+        Ignacio Mascarell Agundez
+      </p>
+      <p class="hero__course">Computational Geometry, iMAT, Comillas ICAI, 2026-2027</p>
+      <a class="button" href="applet.html">Launch interactive applet now</a>
+    </div>
+    <figure class="hero__canvas">
+      <canvas id="hero-canvas" role="img"
+        aria-label="Animation: a point cloud rotates while Quickhull finds the extreme points a and b, the farthest point c, and discards the interior points until the convex hull is closed."></canvas>
+      <figcaption class="hero__note">Animated illustration. The real computation runs in SageMath, inside the applet.</figcaption>
+    </figure>
+  </header>
+
+  <main>
+    <!-- ======================= INTRODUCTION ======================= -->
+    <section class="section" id="introduction">
+      <h2>Introduction</h2>
+
+      <p class="lead">Hammer a handful of nails into a board, stretch a rubber band around all of them and let it go. The band snaps onto the outermost nails and forms a convex polygon. That polygon is the <strong>convex hull</strong> of the nails.</p>
+
+      <figure class="sandbox">
+        <canvas id="sandbox-canvas" role="img" aria-label="Interactive point set with its convex hull. Drag the points, click to add one, double-click to remove one."></canvas>
+        <figcaption class="sandbox__bar">
+          <span>Drag a nail, click an empty spot to add one, double-click a nail to remove it.</span>
+          <span class="sandbox__count" id="sandbox-count" aria-live="polite"></span>
+          <button class="sandbox__reset" id="sandbox-reset" type="button">Reset</button>
+        </figcaption>
+      </figure>
+
+      <p>In geometric terms, the convex hull $CH(S)$ of a finite set $S$ of points in the plane is the smallest convex set that contains $S$. Its boundary is a convex polygon whose corners are points of $S$, and computing $CH(S)$ means finding those corners, in order. Notice how, in the board above, most nails never touch the band: deciding quickly which points can be ignored is exactly what makes a hull algorithm fast.</p>
+
+      <p>The convex hull is one of the oldest problems in computational geometry and a building block for many others, from collision detection to measuring the width of a shape. There are several classic ways to compute it [11, 12]. This site is about one of the most widely used in practice: <strong>Quickhull</strong>, proposed independently by Eddy [6] and Bykat [4] in the late 1970s.</p>
+
+      <h3>Quickhull in four moves</h3>
+      <p>Quickhull borrows the strategy of quicksort: split the problem around a pivot, throw away whatever is already settled, and repeat on the pieces. Here the pivot is a point that is guaranteed to be on the hull: the one farthest from a dividing line.</p>
+
+      <ol class="moves">
+        <li class="move">
+          <svg class="fig" viewBox="0 0 200 145" role="img" aria-label="The extreme points a and b and the line ab splitting the cloud in two halves">
+            <line class="aux" x1="4" y1="82.6" x2="196" y2="71.4"/>
+            <g class="pt"><circle cx="46" cy="36" r="3.2"/><circle cx="150" cy="30" r="3.2"/><circle cx="96" cy="14" r="3.2"/><circle cx="80" cy="50" r="3.2"/><circle cx="110" cy="45" r="3.2"/><circle cx="130" cy="58" r="3.2"/><circle cx="60" cy="62" r="3.2"/><circle cx="70" cy="128" r="3.2"/><circle cx="140" cy="118" r="3.2"/><circle cx="100" cy="100" r="3.2"/><circle cx="50" cy="98" r="3.2"/><circle cx="152" cy="90" r="3.2"/></g>
+            <g class="vx"><circle cx="14" cy="82" r="5"/><circle cx="186" cy="72" r="5"/></g>
+            <text class="lbl" x="8" y="100">a</text><text class="lbl" x="184" y="92">b</text>
+          </svg>
+          <h4>Split</h4>
+          <p>The points with the smallest and the largest $x$, $a$ and $b$, are always on the hull. The line $ab$ cuts the cloud into two halves that can be solved separately.</p>
+        </li>
+        <li class="move">
+          <svg class="fig" viewBox="0 0 200 145" role="img" aria-label="The point c farthest from the line ab, with the perpendicular from ab to c and a line through c parallel to ab">
+            <line class="aux" x1="4" y1="82.6" x2="196" y2="71.4"/>
+            <line class="aux aux--soft" x1="10" y1="19" x2="190" y2="8.5"/>
+            <line class="perp" x1="99.7" y1="77" x2="96" y2="14"/>
+            <g class="pt pt--faded"><circle cx="70" cy="128" r="3.2"/><circle cx="140" cy="118" r="3.2"/><circle cx="100" cy="100" r="3.2"/><circle cx="50" cy="98" r="3.2"/><circle cx="152" cy="90" r="3.2"/></g>
+            <g class="pt pt--current"><circle cx="46" cy="36" r="3.2"/><circle cx="150" cy="30" r="3.2"/><circle cx="80" cy="50" r="3.2"/><circle cx="110" cy="45" r="3.2"/><circle cx="130" cy="58" r="3.2"/><circle cx="60" cy="62" r="3.2"/></g>
+            <g class="vx"><circle cx="14" cy="82" r="5"/><circle cx="186" cy="72" r="5"/><circle cx="96" cy="14" r="5"/></g>
+            <text class="lbl" x="8" y="100">a</text><text class="lbl" x="184" y="92">b</text><text class="lbl" x="104" y="12">c</text>
+          </svg>
+          <h4>Find the farthest point</h4>
+          <p>On one side, take the point $c$ farthest from the line $ab$. Nothing lies beyond the parallel line through $c$, so $c$ is on the hull too.</p>
+        </li>
+        <li class="move">
+          <svg class="fig" viewBox="0 0 200 145" role="img" aria-label="The triangle acb shaded; the points inside it are discarded">
+            <polygon class="tri" points="14,82 96,14 186,72"/>
+            <polyline class="aux" points="14,82 96,14 186,72 14,82"/>
+            <g class="pt pt--faded"><circle cx="70" cy="128" r="3.2"/><circle cx="140" cy="118" r="3.2"/><circle cx="100" cy="100" r="3.2"/><circle cx="50" cy="98" r="3.2"/><circle cx="152" cy="90" r="3.2"/></g>
+            <g class="out"><circle cx="80" cy="50" r="3.2"/><circle cx="110" cy="45" r="3.2"/><circle cx="130" cy="58" r="3.2"/><circle cx="60" cy="62" r="3.2"/></g>
+            <g class="pt pt--current"><circle cx="46" cy="36" r="3.2"/><circle cx="150" cy="30" r="3.2"/></g>
+            <g class="vx"><circle cx="14" cy="82" r="5"/><circle cx="186" cy="72" r="5"/><circle cx="96" cy="14" r="5"/></g>
+            <text class="lbl" x="8" y="100">a</text><text class="lbl" x="184" y="92">b</text><text class="lbl" x="104" y="12">c</text>
+          </svg>
+          <h4>Discard</h4>
+          <p>Every point inside the triangle $acb$ is enclosed by three hull points, so it can never be a corner. It is discarded without a second look.</p>
+        </li>
+        <li class="move">
+          <svg class="fig" viewBox="0 0 200 145" role="img" aria-label="The finished convex hull after repeating the process on every side">
+            <polygon class="veil" points="14,82 46,36 96,14 150,30 186,72 140,118 70,128"/>
+            <polyline class="aux aux--soft" points="14,82 96,14 186,72 14,82"/>
+            <polygon class="edge" points="14,82 46,36 96,14 150,30 186,72 140,118 70,128"/>
+            <g class="out"><circle cx="80" cy="50" r="3.2"/><circle cx="110" cy="45" r="3.2"/><circle cx="130" cy="58" r="3.2"/><circle cx="60" cy="62" r="3.2"/><circle cx="100" cy="100" r="3.2"/><circle cx="50" cy="98" r="3.2"/><circle cx="152" cy="90" r="3.2"/></g>
+            <g class="vx"><circle cx="14" cy="82" r="5"/><circle cx="46" cy="36" r="5"/><circle cx="96" cy="14" r="5"/><circle cx="150" cy="30" r="5"/><circle cx="186" cy="72" r="5"/><circle cx="140" cy="118" r="5"/><circle cx="70" cy="128" r="5"/></g>
+          </svg>
+          <h4>Repeat</h4>
+          <p>Do the same with the points outside $ac$ and outside $cb$, and on the other half. When a segment has no points left outside, it is an edge of the hull.</p>
+        </li>
+      </ol>
+
+      <h3>Why it works</h3>
+      <div class="facts">
+        <div class="fact">
+          <h4>The farthest point is always a corner</h4>
+          <p>Draw the line through $c$ parallel to $ab$. Since no point of the subproblem is farther from $ab$ than $c$, the whole set lies on one side of that line, which touches it only at $c$. A point with a line like that is a vertex of $CH(S)$. (If several points tie, they lie on that line and only its endpoints are corners, so one of them is chosen.)</p>
+        </div>
+        <div class="fact">
+          <h4>The triangle is safe to throw away</h4>
+          <p>The points $a$, $b$ and $c$ are on the hull, and $CH(S)$ is convex, so the whole triangle $acb$ is inside it. A point strictly inside the triangle can be written as a combination of the three corners, so it can never be a corner itself.</p>
+        </div>
+      </div>
+
+      <h3>One formula does all the geometry</h3>
+      <p>Every decision Quickhull makes, which side of a line a point is on and how far away it is, comes from the signed area of a triangle $pqr$:</p>
+      <div class="formula">
+        $$\operatorname{area}(p,q,r) \;=\; \frac{1}{2}\begin{vmatrix} q_x - p_x & r_x - p_x \\ q_y - p_y & r_y - p_y \end{vmatrix}$$
+      </div>
+      <p>It is positive when $r$ is to the <em>left</em> of the directed line $p \to q$, negative when it is to the <em>right</em>, and zero when the three points are collinear. For a fixed segment $pq$, the distance from $r$ to the line is $2\,|\operatorname{area}(p,q,r)| / |pq|$, so the farthest point is simply the one with the largest $|\operatorname{area}|$: no square roots, no divisions.</p>
+
+      <h3>The algorithm</h3>
+      <p>Written with the same notation as the lecture notes [14]. $S$ always holds the points to the right of the directed segment, that is, outside the part of the hull built so far.</p>
+<pre class="code"><code><span class="code__kw">FUNCTION</span> Quickhull(a, b, S)            <span class="code__c">// S: points to the right of a→b</span>
+  <span class="code__kw">if</span> S is empty: <span class="code__kw">return</span> [ ]          <span class="code__c">// ab is an edge of CH(S)</span>
+  c ← point of S farthest from line ab
+  A ← points of S to the right of a→c
+  B ← points of S to the right of c→b
+                                      <span class="code__c">// the rest lie inside triangle acb</span>
+  <span class="code__kw">return</span> Quickhull(a, c, A) + [c] + Quickhull(c, b, B)
+
+<span class="code__kw">QUICKHULL</span>(S)
+  a, b ← points of S with minimum and maximum x
+  <span class="code__kw">return</span> [a] + Quickhull(a, b, right of a→b)
+       + [b] + Quickhull(b, a, right of b→a)</code></pre>
+      <p>The result is the list of corners of $CH(S)$ in counter-clockwise order. The SageMath version used by the applet follows this structure line by line, with one change explained in the <a href="#implementation">discussion</a>: an explicit stack instead of recursion.</p>
+
+      <h3>How fast is it?</h3>
+      <p>Each call scans its points once, $O(n)$, and then solves two smaller problems: $T(n) = T(|A|) + T(|B|) + O(n)$. How small $A$ and $B$ are decides everything.</p>
+      <div class="table-wrap">
+        <table class="cases">
+          <thead>
+            <tr><th scope="col">Case</th><th scope="col">What happens</th><th scope="col">Recurrence</th><th scope="col">Cost</th></tr>
+          </thead>
+          <tbody>
+            <tr><th scope="row">Best</th><td>A single split leaves nothing outside the triangles</td><td>$T(n) = O(n)$</td><td>$O(n)$</td></tr>
+            <tr><th scope="row">Typical</th><td>Splits are roughly balanced and most points are discarded early</td><td>$T(n) = 2\,T(n/2) + O(n)$</td><td>$O(n \log n)$</td></tr>
+            <tr><th scope="row">Worst</th><td>Every split leaves one side empty and removes only one point</td><td>$T(n) = T(n-1) + O(n)$</td><td>$O(n^2)$</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <aside class="note">
+        <h4>All points on the hull is not enough for the worst case</h4>
+        <p>If every point is a corner, no point can be discarded, but Quickhull can still be fast: points spread evenly around a circle are split right down the middle every time, and the cost stays $O(n \log n)$. The worst case also needs <em>unbalanced</em> splits. The applet builds one by placing the points on the parabola $y = x^2$ at $x = 1, \tfrac12, \tfrac14, \dots$, where the farthest point from each chord is always the next one in the list. Try it in the benchmark and watch the exponent jump to 2.</p>
+      </aside>
+    </section>
+
+    <!-- ======================= INSTRUCTIONS ======================= -->
+    <section class="section" id="instructions">
+      <h2>Instructions</h2>
+      <p class="lead">The applet runs real SageMath code on the free SageMathCell servers, so it works in any modern browser and there is nothing to install. You only need an internet connection.</p>
+
+      <ol class="steps">
+        <li>
+          <h4>Open the applet</h4>
+          <p>Press <strong>Launch interactive applet now</strong>, at the top of this page or in the next section.</p>
+        </li>
+        <li>
+          <h4>Load the controls</h4>
+          <p>In the box <em>Quickhull step by step</em>, press <strong>Launch applet</strong>. After a few seconds the controls appear. The first time can take a little longer while the server starts.</p>
+        </li>
+        <li>
+          <h4>Choose a point cloud</h4>
+          <p>Pick a distribution, the number of points and a seed, or type your own points as <code>[(0, 0), (4, 1), (2, 5)]</code>. Tick <em>Quadrilateral filter</em> to discard, before anything else, the points inside the quadrilateral of the four extreme points. Nothing is computed yet, so take your time.</p>
+        </li>
+        <li>
+          <h4>Press Start</h4>
+          <p>SageMath computes the hull and records every step. The player starts right away and keeps repeating the whole process.</p>
+        </li>
+        <li>
+          <h4>Explore it at your pace</h4>
+          <p><strong>Pause</strong> stops it. <strong>Next</strong> draws one step and stops; <strong>Previous</strong> undoes it. Change the speed or drag the bar to jump anywhere. Below the drawing, a caption explains what is happening in each step. After clicking the drawing, the arrow keys and the space bar work too.</p>
+        </li>
+        <li>
+          <h4>Race it against Graham</h4>
+          <p>In the second box, <em>Quickhull versus Graham</em>, press <strong>Launch applet</strong>, choose a cloud and a maximum size, and press <strong>Run benchmark</strong>. You get a plot of the times, a table that checks that both algorithms return exactly the same corners, and the empirical exponent of each one.</p>
+        </li>
+      </ol>
+
+      <div class="legend-card">
+        <h4>Reading the drawing</h4>
+        <ul class="legend">
+          <li><span class="swatch swatch--vertex"></span> Corner of $CH(S)$, already found</li>
+          <li><span class="swatch swatch--current"></span> Point of the subproblem being solved</li>
+          <li><span class="swatch swatch--discarded"></span> Discarded: it can no longer be a corner</li>
+          <li><span class="swatch swatch--pending"></span> Not classified yet</li>
+          <li><span class="swatch swatch--hull"></span> Confirmed edge of the hull</li>
+        </ul>
+      </div>
+
+      <aside class="note">
+        <h4>Three experiments worth trying</h4>
+        <ul>
+          <li>Run a uniform cloud of 25 points with and without the filter and compare the number of steps.</li>
+          <li>Choose <em>Quickhull worst case</em> and watch the hull grow one corner at a time, with nothing ever discarded.</li>
+          <li>Benchmark <em>On a circle</em> and the worst case: in both, every point is a corner, yet only one of them is quadratic.</li>
+        </ul>
+      </aside>
+    </section>
+
+    <!-- ======================= LAUNCH ======================= -->
+    <section class="section section--launch" id="applet">
+      <div class="launch">
+        <div>
+          <h2>Launch interactive applet now</h2>
+          <p>Two SageMath tools are waiting: a player that shows every decision Quickhull makes, one step at a time or all in a row, and a benchmark against Graham's scan on clouds of up to 100,000 points.</p>
+          <a class="button" href="applet.html">Launch interactive applet now</a>
+          <p class="launch__note">Runs on SageMathCell. Needs an internet connection.</p>
+        </div>
+        <svg class="fig launch__fig" viewBox="0 0 200 145" role="img" aria-label="A finished convex hull">
+          <polygon class="veil" points="14,82 46,36 96,14 150,30 186,72 140,118 70,128"/>
+          <polygon class="edge" points="14,82 46,36 96,14 150,30 186,72 140,118 70,128"/>
+          <g class="out"><circle cx="80" cy="50" r="3.2"/><circle cx="110" cy="45" r="3.2"/><circle cx="130" cy="58" r="3.2"/><circle cx="60" cy="62" r="3.2"/><circle cx="100" cy="100" r="3.2"/><circle cx="50" cy="98" r="3.2"/><circle cx="152" cy="90" r="3.2"/></g>
+          <g class="vx"><circle cx="14" cy="82" r="5"/><circle cx="46" cy="36" r="5"/><circle cx="96" cy="14" r="5"/><circle cx="150" cy="30" r="5"/><circle cx="186" cy="72" r="5"/><circle cx="140" cy="118" r="5"/><circle cx="70" cy="128" r="5"/></g>
+        </svg>
+      </div>
+    </section>
+
+    <!-- ======================= DISCUSSION ======================= -->
+    <section class="section" id="discussion">
+      <h2>Discussion and real-world applications</h2>
+
+      <h3>Quickhull among its relatives</h3>
+      <p>Quickhull is one of several classic ways to build a convex hull. Here $n$ is the number of points and $h$ the number of corners of the hull.</p>
+      <div class="table-wrap">
+        <table class="algos">
+          <thead>
+            <tr><th scope="col">Algorithm</th><th scope="col">Idea</th><th scope="col">Time</th></tr>
+          </thead>
+          <tbody>
+            <tr><th scope="row">Jarvis march [9]</th><td>Wraps the set like gift paper, one hull edge at a time</td><td>$O(nh)$</td></tr>
+            <tr><th scope="row">Graham scan [8]</th><td>Sorts the points by angle, then removes the concave turns with a stack</td><td>$O(n \log n)$</td></tr>
+            <tr><th scope="row">Divide and conquer</th><td>Splits by $x$, solves both halves and merges them with two tangents</td><td>$O(n \log n)$</td></tr>
+            <tr><th scope="row">Incremental</th><td>Adds the points one by one in $x$ order and repairs the hull</td><td>$O(n \log n)$</td></tr>
+            <tr class="algos__ours"><th scope="row">Quickhull [6, 4]</th><td>Splits at the farthest point and discards a whole triangle</td><td>$O(n \log n)$ typical, $O(n^2)$ worst</td></tr>
+            <tr><th scope="row">Chan [5]</th><td>Combines Graham and Jarvis on small groups</td><td>$O(n \log h)$, optimal</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>On paper, Quickhull looks like the weakest of the list because of its quadratic worst case. In practice it is often the fastest: it needs no sorting, and on typical data the first few triangles swallow most of the points, so the work that remains is tiny. It shines when the hull has few corners compared with the number of points, which is the usual situation with real measurements.</p>
+
+      <h3>What the benchmark shows</h3>
+      <p>These are the results we obtained with the applet on SageMathCell. Times change with the load of the server, but the trends repeat every time.</p>
+      <ul class="findings">
+        <li><strong>Random clouds:</strong> with 10,000 points uniform in a square, Quickhull is about <strong>2 times faster</strong> than Graham. Both have an empirical exponent of about 1.04: at these sizes, $n \log n$ looks almost linear.</li>
+        <li><strong>Worst case:</strong> with 300 points on the parabola, Quickhull is about <strong>22 times slower</strong> than Graham and its exponent rises to 1.9, close to the 2 predicted by $T(n) = T(n-1) + O(n)$.</li>
+        <li><strong>Every point on the hull, but balanced:</strong> on a circle, all points are corners and Quickhull is still $O(n \log n)$. In our tests it was around 3 times slower than Graham there, because it does one subproblem per edge of the hull.</li>
+        <li><strong>The quadrilateral filter</strong> discards between 30% and 55% of a random cloud before Quickhull even starts, but it does not make our Python code faster: it costs up to four orientation tests per point, while the first split of Quickhull only needs one or two. On the worst-case parabola it discards nothing at all, because the point with the smallest $x$ is also the one with the smallest $y$. Akl and Toussaint [1] proposed it as a cheap first pass, and it pays off most for algorithms that must handle every point anyway, such as Graham's sort.</li>
+      </ul>
+
+      <h3 id="implementation">Implementation notes</h3>
+      <ul class="findings">
+        <li><strong>A stack instead of recursion.</strong> In the worst case the recursion would go $n$ levels deep, and Python stops at about 1,000 levels. Keeping the pending subproblems on an explicit stack gives exactly the same order of work without that limit.</li>
+        <li><strong>Exact ties.</strong> When several points are equally far from $pq$ they lie on a line parallel to it, and only the two ends of that segment are corners. The code picks one of the ends, so points lying on an edge are never reported as corners. We checked the result against an independent hull algorithm on about 36,000 clouds, including repeated points and many collinear ones.</li>
+        <li><strong>Plain numbers.</strong> Points are stored as pairs of floating-point numbers. SageMath vectors read more naturally, but they create a new object in every operation, which makes the inner loop several times slower.</li>
+        <li><strong>Computing and drawing are separate.</strong> SageMath computes the hull and records every step once. Your browser then draws those steps, which is why the player can go back and forth without asking the server again.</li>
+      </ul>
+
+      <h3>Beyond the plane</h3>
+      <p>Quickhull works in any dimension. In 3D, the dividing line becomes a face, the farthest point is the one farthest from that face, and the discarded region is a pyramid. Barber, Dobkin and Huhdanpaa [2] turned this idea into <strong>Qhull</strong>, a library that computes hulls, Delaunay triangulations and Voronoi diagrams in several dimensions. Qhull is the engine behind the convex hull functions of SciPy, MATLAB, Octave and R [15]. If you have ever called <code>scipy.spatial.ConvexHull</code>, you have run Quickhull.</p>
+
+      <h3>Where convex hulls show up</h3>
+      <dl class="uses">
+        <div class="use">
+          <dt>Collision detection</dt>
+          <dd>Games and robots wrap complex objects in convex shapes, because deciding whether two convex sets touch is fast. Algorithms such as GJK [7] measure the distance between convex objects in real time.</dd>
+        </div>
+        <div class="use">
+          <dt>Image analysis</dt>
+          <dd>OpenCV computes the hull of a shape's outline and its <em>convexity defects</em>, the gaps between the outline and its hull. The deepest gaps of a hand outline, for example, sit between the fingers, which is a classic way of counting them [15].</dd>
+        </div>
+        <div class="use">
+          <dt>Ecology</dt>
+          <dd>The <em>minimum convex polygon</em> is the convex hull of all the places where an animal has been observed. Since Mohr [10] it has been a standard first estimate of an animal's home range, although it tends to overestimate it.</dd>
+        </div>
+        <div class="use">
+          <dt>Measuring shapes</dt>
+          <dd>The two farthest points of a cloud, its diameter, are always corners of the hull, and so are the points that define its width. Once the hull is known, the rotating calipers [13] find both in linear time instead of checking every pair of points.</dd>
+        </div>
+        <div class="use">
+          <dt>Statistics</dt>
+          <dd>Removing the hull of a data set again and again, like peeling an onion, orders multivariate data from the outside in [3]. The outer layers flag possible outliers and the innermost one gives a robust idea of the centre.</dd>
+        </div>
+      </dl>
+    </section>
+
+    <!-- ======================= REFERENCES ======================= -->
+    <section class="section" id="references">
+      <h2>References</h2>
+      <ol class="refs">
+        <li>S. G. Akl and G. T. Toussaint. A fast convex hull algorithm. <em>Information Processing Letters</em>, 7(5):219–222, 1978. <a href="https://doi.org/10.1016/0020-0190(78)90003-0">doi:10.1016/0020-0190(78)90003-0</a></li>
+        <li>C. B. Barber, D. P. Dobkin and H. Huhdanpaa. The Quickhull algorithm for convex hulls. <em>ACM Transactions on Mathematical Software</em>, 22(4):469–483, 1996. <a href="https://doi.org/10.1145/235815.235821">doi:10.1145/235815.235821</a></li>
+        <li>V. Barnett. The ordering of multivariate data. <em>Journal of the Royal Statistical Society, Series A</em>, 139(3):318–355, 1976. <a href="https://doi.org/10.2307/2344839">doi:10.2307/2344839</a></li>
+        <li>A. Bykat. Convex hull of a finite set of points in two dimensions. <em>Information Processing Letters</em>, 7(6):296–298, 1978. <a href="https://doi.org/10.1016/0020-0190(78)90021-2">doi:10.1016/0020-0190(78)90021-2</a></li>
+        <li>T. M. Chan. Optimal output-sensitive convex hull algorithms in two and three dimensions. <em>Discrete &amp; Computational Geometry</em>, 16(4):361–368, 1996. <a href="https://doi.org/10.1007/BF02712873">doi:10.1007/BF02712873</a></li>
+        <li>W. F. Eddy. A new convex hull algorithm for planar sets. <em>ACM Transactions on Mathematical Software</em>, 3(4):398–403, 1977. <a href="https://doi.org/10.1145/355759.355766">doi:10.1145/355759.355766</a></li>
+        <li>E. G. Gilbert, D. W. Johnson and S. S. Keerthi. A fast procedure for computing the distance between complex objects in three-dimensional space. <em>IEEE Journal on Robotics and Automation</em>, 4(2):193–203, 1988. <a href="https://doi.org/10.1109/56.2083">doi:10.1109/56.2083</a></li>
+        <li>R. L. Graham. An efficient algorithm for determining the convex hull of a finite planar set. <em>Information Processing Letters</em>, 1(4):132–133, 1972. <a href="https://doi.org/10.1016/0020-0190(72)90045-2">doi:10.1016/0020-0190(72)90045-2</a></li>
+        <li>R. A. Jarvis. On the identification of the convex hull of a finite set of points in the plane. <em>Information Processing Letters</em>, 2(1):18–21, 1973. <a href="https://doi.org/10.1016/0020-0190(73)90020-3">doi:10.1016/0020-0190(73)90020-3</a></li>
+        <li>C. O. Mohr. Table of equivalent populations of North American small mammals. <em>The American Midland Naturalist</em>, 37(1):223–249, 1947.</li>
+        <li>J. O'Rourke. <em>Computational Geometry in C</em>, 2nd edition. Cambridge University Press, 1998.</li>
+        <li>F. P. Preparata and M. I. Shamos. <em>Computational Geometry: An Introduction</em>. Springer, 1985.</li>
+        <li>G. T. Toussaint. Solving geometric problems with the rotating calipers. <em>Proceedings of IEEE MELECON '83</em>, Athens, 1983.</li>
+        <li>Lecture notes of Geometría Computacional, Tema 2: Cierres convexos. Universidad Pontificia Comillas, ICAI, 2026-2027.</li>
+        <li>Software documentation: <a href="http://www.qhull.org">Qhull</a>; <a href="https://docs.scipy.org/doc/scipy/reference/generated/scipy.spatial.ConvexHull.html">SciPy, scipy.spatial.ConvexHull</a>; <a href="https://docs.opencv.org/4.x/d5/d45/tutorial_py_contours_more_functions.html">OpenCV, contours: convexity defects</a>; <a href="https://www.sagemath.org">SageMath</a> and <a href="https://sagecell.sagemath.org">SageMathCell</a>.</li>
+      </ol>
+      <p class="refs__more">For a broader view of the field: M. de Berg, O. Cheong, M. van Kreveld and M. Overmars, <em>Computational Geometry: Algorithms and Applications</em>, 3rd edition, Springer, 2008.</p>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <p>Javier Martínez Berenguer, Javier Mochales López and Ignacio Mascarell Agundez. Final project for Computational Geometry, iMAT, Comillas ICAI, 2026-2027.</p>
+  </footer>
+
+  <script src="assets/js/hero-quickhull.js"></script>
+  <script src="assets/js/hull-sandbox.js"></script>
+</body>
+</html>

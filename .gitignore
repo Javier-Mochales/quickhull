@@ -1,0 +1,11 @@
+# Editor and system files
+.DS_Store
+Thumbs.db
+desktop.ini
+.vscode/
+.idea/
+
+# Python / Sage caches (if the code is ever run locally)
+__pycache__/
+*.pyc
+*.sage.py

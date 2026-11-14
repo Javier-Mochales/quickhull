@@ -1,0 +1,645 @@
+/* ==========================================================
+   Quickhull - shared stylesheet (index.html and applet.html)
+   Colours encode meaning, exactly as in the applet:
+   hull = green, vertex of CH(S) = yellow, discarded = red
+   ========================================================== */
+
+:root {
+  --paper: #F4F7F6;          /* background */
+  --paper-raised: #FFFFFF;   /* raised surfaces */
+  --ink: #1C2B36;            /* main text */
+  --ink-soft: #4A5B66;       /* secondary text */
+  --line: #8A9BA6;           /* auxiliary lines (ab, triangles) */
+  --border: #D5DEDB;
+  --hull: #1F8F6A;           /* convex hull edges, accent */
+  --on-hull: #FFFFFF;        /* text on the green button */
+  --hull-veil: rgba(31, 143, 106, 0.14);
+  --vertex: #E3A90B;         /* vertices of CH(S) */
+  --discarded: #B8423C;      /* discarded interior points */
+  --point: #1C2B36;          /* points not yet classified */
+
+  --font-display: "Jost", "Futura", "Century Gothic", sans-serif;
+  --font-body: "Literata", "Georgia", serif;
+  --font-code: "JetBrains Mono", "Consolas", monospace;
+
+  color-scheme: light;
+}
+
+/* Dark mode: follows the system unless the user picked light */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #13212A;
+    --paper-raised: #1A2C37;
+    --ink: #E3ECE9;
+    --ink-soft: #9FB1BA;
+    --line: #6B808C;
+    --border: #2A3E4A;
+    --hull: #3DC196;
+    --on-hull: #0E1C16;
+    --hull-veil: rgba(61, 193, 150, 0.16);
+    --vertex: #F2BF33;
+    --discarded: #E06A62;
+    --point: #C9D6D2;
+    color-scheme: dark;
+  }
+}
+
+/* Dark mode chosen with the toggle */
+:root[data-theme="dark"] {
+  --paper: #13212A;
+  --paper-raised: #1A2C37;
+  --ink: #E3ECE9;
+  --ink-soft: #9FB1BA;
+  --line: #6B808C;
+  --border: #2A3E4A;
+  --hull: #3DC196;
+  --on-hull: #0E1C16;
+  --hull-veil: rgba(61, 193, 150, 0.16);
+  --vertex: #F2BF33;
+  --discarded: #E06A62;
+  --point: #C9D6D2;
+  color-scheme: dark;
+}
+
+/* ---------- Base ---------- */
+*, *::before, *::after { box-sizing: border-box; }
+
+html { scroll-behavior: smooth; scroll-padding-top: 4.5rem; }
+
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-size: 1.0625rem;
+  line-height: 1.7;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, h3 {
+  font-family: var(--font-display);
+  font-weight: 500;
+  line-height: 1.1;
+  letter-spacing: -0.01em;
+}
+
+a { color: var(--hull); text-underline-offset: 0.18em; }
+
+:focus-visible {
+  outline: 2px solid var(--hull);
+  outline-offset: 3px;
+  border-radius: 2px;
+}
+
+/* ---------- Top navigation ---------- */
+.nav {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: var(--paper);
+  border-bottom: 1px solid var(--border);
+}
+
+.nav__inner {
+  max-width: 72rem;
+  margin: 0 auto;
+  padding: 0.75rem 1rem;
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+.nav__brand {
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: 1.15rem;
+  color: var(--ink);
+  text-decoration: none;
+  margin-right: auto;
+}
+
+.nav__links {
+  display: flex;
+  gap: 1.25rem;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  font-family: var(--font-display);
+  font-size: 0.95rem;
+}
+
+.nav__links a { color: var(--ink-soft); text-decoration: none; }
+.nav__links a:hover { color: var(--ink); }
+
+.theme-toggle {
+  font: inherit;
+  font-family: var(--font-display);
+  font-size: 0.9rem;
+  color: var(--ink-soft);
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 0.3rem 0.65rem;
+  cursor: pointer;
+}
+.theme-toggle:hover { color: var(--ink); border-color: var(--line); }
+
+@media (max-width: 720px) {
+  .nav__links { display: none; }
+}
+
+/* ---------- Hero ---------- */
+.hero {
+  max-width: 72rem;
+  margin: 0 auto;
+  padding: 4rem 1rem 3rem;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr);
+  gap: 3rem;
+  align-items: center;
+  min-height: calc(100vh - 3.5rem);
+}
+
+.hero__title {
+  font-size: clamp(3.2rem, 8vw, 6rem);
+  margin: 0;
+  letter-spacing: -0.03em;
+}
+
+.hero__tagline {
+  font-size: 1.2rem;
+  max-width: 30rem;
+  margin: 1.25rem 0 0;
+}
+
+.hero__authors {
+  font-family: var(--font-display);
+  color: var(--ink-soft);
+  font-size: 0.98rem;
+  line-height: 1.5;
+  margin: 1.5rem 0 0;
+}
+
+.hero__course {
+  font-family: var(--font-display);
+  color: var(--ink-soft);
+  font-size: 0.9rem;
+  margin: 0.35rem 0 0;
+}
+
+.button {
+  display: inline-block;
+  margin-top: 2rem;
+  font-family: var(--font-display);
+  font-size: 1.05rem;
+  font-weight: 500;
+  text-decoration: none;
+  color: var(--on-hull);
+  background: var(--hull);
+  padding: 0.8rem 1.4rem;
+  border-radius: 6px;
+}
+.button:hover { filter: brightness(1.08); }
+
+.hero__canvas {
+  position: relative;
+  width: 100%;
+  max-width: 34rem;
+  margin: 0;
+  justify-self: center;
+}
+
+.hero__canvas canvas {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  display: block;
+}
+
+.hero__note {
+  font-family: var(--font-display);
+  font-size: 0.82rem;
+  color: var(--ink-soft);
+  text-align: center;
+  margin: 0.5rem 0 0;
+}
+
+@media (max-width: 820px) {
+  .hero {
+    grid-template-columns: minmax(0, 1fr);
+    padding-top: 2.5rem;
+    gap: 2rem;
+    min-height: 0;
+  }
+  .hero__canvas { max-width: 24rem; }
+}
+
+/* ---------- Text sections ---------- */
+.section {
+  max-width: 44rem;
+  margin: 0 auto;
+  padding: 3rem 1rem;
+  border-top: 1px solid var(--border);
+}
+
+.section h2 { font-size: 2.1rem; margin: 0 0 1rem; }
+.section h3 { font-size: 1.45rem; margin: 2.6rem 0 0.75rem; }
+.section h4 { font-family: var(--font-display); font-weight: 500; font-size: 1.05rem; margin: 0 0 0.35rem; line-height: 1.3; }
+.section p { margin: 0 0 1rem; }
+.section code { font-family: var(--font-code); font-size: 0.86em; }
+.section ul { padding-left: 1.2rem; }
+
+.lead { font-size: 1.2rem; line-height: 1.65; }
+
+.pending { color: var(--ink-soft); font-style: italic; }
+
+/* ---------- Figures drawn in SVG: same colour meaning as the applet ---------- */
+.fig { display: block; width: 100%; height: auto; overflow: visible; }
+.fig .pt circle { fill: var(--point); }
+.fig .pt--faded circle { fill: var(--line); opacity: 0.55; }
+.fig .pt--current circle { fill: var(--ink); }
+.fig .out circle { fill: var(--discarded); }
+.fig .vx circle { fill: var(--vertex); stroke: var(--ink); stroke-width: 1.2; }
+.fig .aux { stroke: var(--line); stroke-width: 1.2; stroke-dasharray: 4 4; fill: none; }
+.fig .aux--soft { opacity: 0.6; }
+.fig .perp { stroke: var(--ink); stroke-width: 1.2; }
+.fig .tri { fill: var(--discarded); fill-opacity: 0.16; }
+.fig .veil { fill: var(--hull-veil); }
+.fig .edge { fill: none; stroke: var(--hull); stroke-width: 2.6; stroke-linejoin: round; }
+.fig .lbl { fill: var(--ink); font-family: var(--font-body); font-style: italic; font-size: 14px; }
+
+/* ---------- Sandbox (nails and rubber band) ---------- */
+.sandbox {
+  margin: 1.75rem 0 2rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--paper-raised);
+  overflow: hidden;
+}
+.sandbox canvas { display: block; width: 100%; aspect-ratio: 16 / 9; touch-action: none; cursor: crosshair; }
+.sandbox__bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem 1rem;
+  padding: 0.6rem 0.9rem;
+  border-top: 1px solid var(--border);
+  font-family: var(--font-display);
+  font-size: 0.88rem;
+  color: var(--ink-soft);
+}
+.sandbox__count { margin-left: auto; color: var(--ink); font-variant-numeric: tabular-nums; }
+.sandbox__reset {
+  font: inherit;
+  color: var(--ink);
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 0.2rem 0.7rem;
+  cursor: pointer;
+}
+.sandbox__reset:hover { border-color: var(--line); }
+
+/* ---------- The four moves (a real sequence: numbered) ---------- */
+.moves {
+  list-style: none;
+  counter-reset: move;
+  padding: 0;
+  margin: 1.5rem 0 0.5rem;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 2rem 1.75rem;
+}
+.move { counter-increment: move; }
+.move .fig { margin-bottom: 0.75rem; }
+.move h4::before {
+  content: counter(move);
+  display: inline-grid;
+  place-items: center;
+  width: 1.5rem;
+  height: 1.5rem;
+  margin-right: 0.5rem;
+  border-radius: 50%;
+  background: var(--hull);
+  color: var(--on-hull);
+  font-size: 0.85rem;
+}
+.move p { font-size: 0.97rem; line-height: 1.6; }
+@media (max-width: 640px) { .moves { grid-template-columns: minmax(0, 1fr); } }
+
+/* ---------- Why it works ---------- */
+.facts { display: grid; gap: 1rem; }
+.fact {
+  border-left: 3px solid var(--hull);
+  padding: 0.2rem 0 0.2rem 1.1rem;
+}
+.fact p { margin: 0; }
+
+/* ---------- Formula and pseudocode ---------- */
+.formula { overflow-x: auto; margin: 0.5rem 0 1.25rem; }
+
+.code {
+  font-family: var(--font-code);
+  font-size: 0.84rem;
+  line-height: 1.6;
+  background: var(--paper-raised);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 1.1rem 1.25rem;
+  overflow-x: auto;
+  margin: 0 0 1rem;
+}
+.code code { font-size: inherit; }
+.code__kw { color: var(--hull); font-weight: 600; }
+.code__c { color: var(--ink-soft); font-style: italic; }
+
+/* ---------- Tables ---------- */
+.table-wrap { overflow-x: auto; margin: 0.5rem 0 1.25rem; }
+.section table { width: 100%; border-collapse: collapse; font-size: 0.95rem; line-height: 1.5; }
+.section th, .section td { text-align: left; vertical-align: top; padding: 0.6rem 0.75rem 0.6rem 0; border-bottom: 1px solid var(--border); }
+.section thead th { font-family: var(--font-display); font-weight: 500; color: var(--ink-soft); font-size: 0.88rem; }
+.section tbody th { font-family: var(--font-display); font-weight: 500; white-space: nowrap; }
+.algos__ours th, .algos__ours td { background: var(--hull-veil); }
+.algos__ours th { padding-left: 0.5rem; }
+
+/* ---------- Callouts ---------- */
+.note {
+  background: var(--paper-raised);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 1.1rem 1.25rem;
+  margin: 1.5rem 0 0;
+}
+.note p:last-child, .note ul:last-child { margin-bottom: 0; }
+.note ul { margin: 0; }
+.note li + li { margin-top: 0.35rem; }
+
+/* ---------- Instructions: numbered steps ---------- */
+.steps { list-style: none; counter-reset: step; padding: 0; margin: 1.75rem 0 0; }
+.steps li {
+  counter-increment: step;
+  position: relative;
+  padding: 0 0 1.4rem 3rem;
+}
+.steps li::before {
+  content: counter(step);
+  position: absolute;
+  left: 0;
+  top: -0.15rem;
+  width: 2rem;
+  height: 2rem;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  border: 2px solid var(--hull);
+  color: var(--hull);
+  font-family: var(--font-display);
+  font-weight: 500;
+}
+.steps li::after {                 /* thin line joining the numbers */
+  content: "";
+  position: absolute;
+  left: 0.95rem;
+  top: 2.1rem;
+  bottom: 0.2rem;
+  width: 2px;
+  background: var(--border);
+}
+.steps li:last-child::after { display: none; }
+.steps p { margin: 0; }
+
+.legend-card { margin: 1rem 0 0; }
+.legend { list-style: none; padding: 0 !important; margin: 0.5rem 0 0; display: grid; gap: 0.35rem; }
+.legend .swatch { margin-left: 0; }
+
+/* ---------- Launch band ---------- */
+.section--launch { max-width: 60rem; }
+.launch {
+  display: grid;
+  grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr);
+  gap: 2.5rem;
+  align-items: center;
+  background: var(--paper-raised);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 2.25rem 2.5rem;
+}
+.launch h2 { margin-bottom: 0.75rem; }
+.launch .button { margin-top: 0.5rem; }
+.launch__note { font-family: var(--font-display); font-size: 0.85rem; color: var(--ink-soft); margin: 0.75rem 0 0 !important; }
+.launch__fig { max-width: 18rem; justify-self: center; }
+@media (max-width: 720px) {
+  .launch { grid-template-columns: minmax(0, 1fr); padding: 1.75rem 1.25rem; }
+  .launch__fig { max-width: 12rem; }
+}
+
+/* ---------- Discussion ---------- */
+.findings { list-style: none; padding: 0 !important; margin: 0.5rem 0 1rem; }
+.findings li { padding: 0.65rem 0; border-bottom: 1px solid var(--border); }
+.findings li:last-child { border-bottom: 0; }
+
+.uses { margin: 1rem 0 0; display: grid; gap: 1.25rem; }
+.use { display: grid; grid-template-columns: 10rem minmax(0, 1fr); gap: 1.25rem; }
+.use dt { font-family: var(--font-display); font-weight: 500; color: var(--hull); }
+.use dd { margin: 0; }
+@media (max-width: 640px) { .use { grid-template-columns: minmax(0, 1fr); gap: 0.25rem; } }
+
+/* ---------- References and footer ---------- */
+.refs { padding-left: 1.6rem; font-size: 0.93rem; line-height: 1.6; }
+.refs li { padding-left: 0.3rem; margin-bottom: 0.6rem; }
+.refs li::marker { font-family: var(--font-display); color: var(--ink-soft); }
+.refs a { overflow-wrap: anywhere; }
+.refs__more { font-size: 0.93rem; color: var(--ink-soft); }
+
+.footer {
+  border-top: 1px solid var(--border);
+  padding: 2rem 1rem 3rem;
+  text-align: center;
+  font-family: var(--font-display);
+  font-size: 0.88rem;
+  color: var(--ink-soft);
+}
+.footer p { max-width: 44rem; margin: 0 auto; }
+
+/* ---------- Applet page ---------- */
+.applet {
+  max-width: 76rem;
+  margin: 0 auto;
+  padding: 2.5rem 1rem 4rem;
+}
+
+.applet__header h1 { font-size: clamp(2.4rem, 5vw, 3.4rem); margin: 0 0 0.75rem; }
+.applet__header p { max-width: 44rem; margin: 0; color: var(--ink-soft); }
+
+.applet__block {
+  padding: 2.5rem 0;
+  border-bottom: 1px solid var(--border);
+}
+.applet__block h2 { font-size: 1.8rem; margin: 0 0 1.25rem; }
+
+.applet__columns {
+  display: grid;
+  grid-template-columns: minmax(0, 17rem) minmax(0, 1fr);
+  gap: 2rem;
+  align-items: start;
+}
+
+.applet__guide { font-size: 0.97rem; line-height: 1.6; }
+.applet__guide p { margin: 0 0 1rem; }
+.applet__guide dl { margin: 0; }
+.applet__guide dt { font-family: var(--font-display); font-weight: 500; margin-top: 0.8rem; }
+.applet__guide dd { margin: 0.15rem 0 0; color: var(--ink-soft); }
+.applet__guide code { font-family: var(--font-code); font-size: 0.85em; }
+
+.applet__legend {
+  font-family: var(--font-display);
+  font-size: 0.88rem;
+  color: var(--ink-soft);
+  line-height: 2;
+  margin-top: 1.5rem !important;
+}
+
+.swatch {
+  display: inline-block;
+  width: 0.7rem;
+  height: 0.7rem;
+  border-radius: 50%;
+  margin: 0 0.3rem 0 0.6rem;
+  vertical-align: -0.05rem;
+}
+.swatch:first-child { margin-left: 0; }
+/* fixed colours: they are the ones of the Sage plot, which is always light */
+.swatch--vertex    { background: #E3A90B; box-shadow: inset 0 0 0 1.5px #1C2B36; }
+.swatch--discarded { background: #B8423C; }
+.swatch--current   { background: #1C2B36; box-shadow: 0 0 0 1px var(--line); }
+.swatch--pending   { background: #A9B6BD; }
+.swatch--hull      { width: 1.1rem; height: 0.22rem; border-radius: 2px; background: #1F8F6A; vertical-align: 0.15rem; }
+
+/* The Sage cell draws on white: it is shown as a light sheet even in
+   dark mode, so the colours of the plot never change. */
+.sheet {
+  background: #FFFFFF;
+  color: #1C2B36;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 1.25rem;
+  min-height: 8rem;
+  overflow-x: auto;
+  color-scheme: light;
+}
+
+.sheet__notice { font-family: var(--font-display); color: #4A5B66; margin: 0; }
+
+/* Before the applet is launched there is only the button: no empty white box */
+.sheet--idle {
+  background: transparent;
+  border-color: transparent;
+  padding: 0;
+  min-height: 0;
+}
+.sheet--idle .sheet__notice { color: var(--ink-soft); }
+
+/* Sage text output (print) wraps instead of overflowing */
+.sheet pre,
+.sheet pre.sagecell_stdout {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  font-family: var(--font-body);
+  font-size: 0.98rem;
+  line-height: 1.55;
+}
+
+.sheet .sagecell_evalButton {
+  font-family: var(--font-display) !important;
+  font-size: 1rem !important;
+  background: #1F8F6A !important;
+  border: 0 !important;
+  color: #FFFFFF !important;
+  padding: 0.6rem 1.2rem !important;
+  border-radius: 6px !important;
+}
+
+/* ---------- Animation player (inside the light sheet) ---------- */
+.qh-player { font-family: var(--font-display); max-width: 34rem; }
+
+.qh-player__canvas {
+  display: block;
+  width: 100%;
+  aspect-ratio: 1 / 1;
+}
+
+.qh-player__controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 0.75rem;
+  margin-top: 0.75rem;
+  font-size: 0.92rem;
+  color: #4A5B66;
+}
+
+.qh-player button,
+.qh-player select {
+  font: inherit;
+  color: #1C2B36;
+  background: #FFFFFF;
+  border: 1px solid #C9D3D0;
+  border-radius: 6px;
+  padding: 0.4rem 0.85rem;
+  cursor: pointer;
+}
+.qh-player button:hover,
+.qh-player select:hover { border-color: #8A9BA6; }
+.qh-player select { padding: 0.3rem 0.4rem; margin-left: 0.25rem; }
+
+.qh-player .qh-player__play {
+  min-width: 5.5rem;
+  background: #1F8F6A;
+  border-color: #1F8F6A;
+  color: #FFFFFF;
+  font-weight: 500;
+}
+.qh-player .qh-player__play:hover { filter: brightness(1.08); }
+
+.qh-player__seek {
+  flex: 1 1 100%;                 /* the bar takes its own row under the buttons */
+  margin: 0.35rem 0 0;
+  accent-color: #1F8F6A;
+}
+
+.qh-player__counter { font-variant-numeric: tabular-nums; margin-left: auto; }
+
+.qh-player:focus { outline: none; }
+.qh-player:focus-visible { outline: 2px solid #1F8F6A; outline-offset: 6px; border-radius: 4px; }
+
+.qh-player__caption {
+  font-family: var(--font-body);
+  font-size: 0.98rem;
+  line-height: 1.55;
+  color: #1C2B36;
+  min-height: 4.7em;
+  margin: 0.75rem 0 0;
+}
+
+/* The Start / Run benchmark button of the interacts */
+.sheet .sheet__run {
+  font-family: var(--font-display) !important;
+  font-size: 1rem !important;
+  font-weight: 500;
+  background: #1F8F6A !important;
+  border: 0 !important;
+  color: #FFFFFF !important;
+  padding: 0.55rem 1.4rem !important;
+  border-radius: 6px !important;
+  cursor: pointer;
+}
+.sheet .sheet__run:hover { filter: brightness(1.08); }
+
+.applet__source { font-family: var(--font-display); color: var(--ink-soft); font-size: 0.95rem; margin-top: 2rem; }
+
+@media (max-width: 900px) {
+  .applet__columns { grid-template-columns: minmax(0, 1fr); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+}
